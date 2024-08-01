@@ -96,20 +96,23 @@ io.on('connection', (socket) => {
     });
     socket.on('checkSelectedDice', (gameId) => {
         const isValid = gameServer.checkSelectedDice(gameId);
-        socket.emit('selectedDiceChecked', isValid);
+        io.to(gameId).emit('selectedDiceChecked', isValid);
         console.log(`Ausgewählte Würfel überprüft in Spiel ${gameId}: ${isValid}`);
     });
     socket.on('checkThrownDiceValues', (gameId) => {
         const isValid = gameServer.checkThrownDice(gameId);
-        socket.emit('thrownDiceChecked', isValid);
+        io.to(gameId).emit('thrownDiceChecked', isValid);
         console.log(`Geworfene Würfel überprüft in Spiel ${gameId}: ${isValid}`);
     });
     socket.on('disconnect', () => {
         console.log('Ein Spieler hat die Verbindung getrennt');
         // Hier könnten Sie zusätzliche Logik für das Behandeln von Spieler-Disconnects implementieren
     });
+    socket.on('syncDice', (payload) => {
+        io.to(payload.gameId).emit('recievedDiceValues', payload.diceValues);
+    });
 });
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server läuft auf Port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
