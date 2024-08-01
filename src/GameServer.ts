@@ -237,7 +237,7 @@ class GameServer {
         } else if (numbersWithThreeOccurrences.length === 1) {
             console.log("numbersWithThreeOccurrences === 1")
             console.log("Other numbers" + otherNumbers)
-            game.throwScore += numbersWithThreeOccurrences[0] === 1 ? 2000 : numbersWithThreeOccurrences[0] * 200;
+            game.throwScore += numbersWithThreeOccurrences[0] === 1 ? 2000 : numbersWithThreeOccurrences[0] * 100;
 
             otherNumbers.forEach(number => {
                 if (number === 1) {
