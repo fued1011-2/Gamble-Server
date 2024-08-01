@@ -14,9 +14,7 @@
   "description": "Simple Web-Socket Server for Gamble-Game",
   "dependencies": {
     "express": "^4.19.2",
-    "socket.io": "^4.7.5"
-  },
-  "devDependencies": {
+    "socket.io": "^4.7.5",
     "@types/express": "^4.17.21",
     "@types/node": "^20.14.11",
     "@types/socket.io": "^3.0.2",
