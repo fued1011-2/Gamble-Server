@@ -112,6 +112,7 @@ io.on('connection', (socket) => {
         io.to(payload.gameId).emit('recievedDiceValues', payload.diceValues);
     });
     socket.on('playerLeft', (data) => {
+        gameServer.removePlayer(data.gameId, data.username);
         console.log(`Spieler ${data.username} hat das Spiel ${data.gameId} verlassen`);
         io.to(data.gameId).emit('playerDidLeave', data.username);
         socket.leave(data.gameId);

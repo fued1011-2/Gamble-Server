@@ -129,6 +129,7 @@ io.on('connection', (socket: GameSocket) => {
     })
 
     socket.on('playerLeft', (data: { gameId: string; username: string }) => {
+        gameServer.removePlayer(data.gameId, data.username)
         console.log(`Spieler ${data.username} hat das Spiel ${data.gameId} verlassen`);
         io.to(data.gameId).emit('playerDidLeave', data.username)
         socket.leave(data.gameId)
