@@ -297,6 +297,14 @@ class GameServer {
         return game;
     }
 
+    removePlayer(gameId:string, username: string): GameState | undefined {
+        const game = this.games.get(gameId);
+        if (game) {
+            game.players = game.players.filter(player => player.username !== username);
+        }
+        return game
+    }
+
     zero(gameId: string): GameState | undefined {
         const game = this.games.get(gameId);
         if (game) {
