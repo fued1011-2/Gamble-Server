@@ -106,10 +106,15 @@ io.on('connection', (socket) => {
     });
     socket.on('disconnect', () => {
         console.log('Ein Spieler hat die Verbindung getrennt');
-        // Hier könnten Sie zusätzliche Logik für das Behandeln von Spieler-Disconnects implementieren
+        socket.disconnect;
     });
     socket.on('syncDice', (payload) => {
         io.to(payload.gameId).emit('recievedDiceValues', payload.diceValues);
+    });
+    socket.on('playerLeft', (data) => {
+        console.log(`Spieler ${data.username} hat das Spiel ${data.gameId} verlassen`);
+        io.to(data.gameId).emit('playerDidLeave', data.username);
+        socket.leave(data.gameId);
     });
 });
 const PORT = process.env.PORT || 3000;
