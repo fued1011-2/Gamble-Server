@@ -137,10 +137,11 @@ io.on('connection', (socket: GameSocket) => {
         socket.disconnect
     });
 
-    socket.on('syncDice', (payload: { gameId: string; diceValues: DiceValue[] }) => {
-        console.log(`SyncDice: recievedDiceValues: ${payload.diceValues} for game ${payload.gameId}`);
-        io.to(payload.gameId).emit('recievedDiceValues', payload.diceValues)
-    })
+    socket.on('syncDice', (payload) => {
+        console.log(`SyncDice: received for game ${payload.gameId}`);
+        console.log("Dice values:", JSON.stringify(payload.diceValues, null, 2));
+        io.to(payload.gameId).emit('receivedDiceValues', payload.diceValues);
+    });
 
     socket.on('playerLeft', ({ gameId, username }: { gameId: string; username: string }) => {
         gameServer.removePlayer(gameId, username)
