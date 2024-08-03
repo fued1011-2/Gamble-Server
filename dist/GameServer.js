@@ -23,6 +23,15 @@ class GameServer {
             creator: { id: (0, crypto_1.randomUUID)(), score: 0, username: '', zeroCount: 0, scoreHistory: [] }
         });
     }
+    checkIfGameExists(gameId) {
+        const game = this.games.get(gameId);
+        if (game) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
     createRandomDiceRotation() {
         const randomFloat = (min, max) => Math.random() * (max - min) + min;
         return {
@@ -286,12 +295,27 @@ class GameServer {
         console.log(username);
         const game = this.games.get(gameId);
         if (game) {
-            game.players = game.players.filter(player => player.username !== username);
             const disconnectedPlayer = game.players.find(player => player.username === username);
+            game.players = game.players.filter(player => player.username !== username);
             if (disconnectedPlayer) {
                 game.disconnectedPlayers.push(disconnectedPlayer);
             }
             console.log(game.players);
+        }
+        return game;
+    }
+    deductPointsFromPlayer(gameId, username) {
+        const game = this.games.get(gameId);
+        if (game) {
+            const playerToDeduct = game.players.find(player => player.username === username);
+            if (playerToDeduct) {
+                playerToDeduct.score -= 500;
+                playerToDeduct.score = Math.max(playerToDeduct.score, 0);
+                console.log(`Deducted ${500} points from ${username} in game ${gameId}`);
+            }
+            else {
+                console.error(`Player ${username} not found in game ${gameId}`);
+            }
         }
         return game;
     }
@@ -319,13 +343,16 @@ class GameServer {
         return game;
     }
     addPlayer(gameId, username, isCreator) {
+        console.log('Add Player');
         const game = this.games.get(gameId);
         if (game) {
             const formerPlayer = this.getFormerPlayer(gameId, username);
             if (formerPlayer) {
+                console.log(`isFormerPlayer: ${formerPlayer}`);
                 game.players.push(formerPlayer);
             }
             else {
+                console.log(`isNotFormerPlayer: ${formerPlayer}`);
                 game.players.push({ id: (0, crypto_1.randomUUID)(), score: 0, username: username, zeroCount: 0, scoreHistory: [] });
             }
             if (isCreator) {
@@ -337,11 +364,27 @@ class GameServer {
     getFormerPlayer(gameId, username) {
         const game = this.games.get(gameId);
         if (game) {
+            console.log(`getFormerPlayer for ${username} from ${game.disconnectedPlayers}`);
             const formerPlayer = game.disconnectedPlayers.find(player => player.username == username);
             if (formerPlayer) {
                 return formerPlayer;
             }
         }
+    }
+    isCreator(gameId, username) {
+        const game = this.games.get(gameId);
+        if (game) {
+            if (game.creator.username == username) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        return false;
+    }
+    deleteGame(gameId) {
+        this.games.delete(gameId);
     }
     checkSelectedDice(gameId) {
         const game = this.games.get(gameId);
@@ -416,6 +459,9 @@ class GameServer {
     isStreet(array) {
         const uniqueValues = new Set(array);
         return uniqueValues.size === array.length && uniqueValues.size === 6;
+    }
+    getGame(gameId) {
+        return this.games.get(gameId);
     }
 }
 exports.default = GameServer;

@@ -32,6 +32,11 @@ io.on('connection', (socket: GameSocket) => {
       }
   });
 
+  socket.on('checkIfGameExists', (gameId: string) => {
+    const gameExists = gameServer.checkIfGameExists(gameId)
+    socket.emit('gameIdChecked', gameExists)
+  })
+
   socket.on('joinGame', ({ gameId, username }: { gameId: string; username: string }) => {
       const game = gameServer.addPlayer(gameId, username, false);
       if (game) {
@@ -119,21 +124,42 @@ io.on('connection', (socket: GameSocket) => {
       console.log(`Geworfene Würfel überprüft in Spiel ${gameId}: ${isValid}`);
   });
 
+    socket.on('deductPointsFromPlayer', ({ gameId, username }: { gameId: string; username: string }) => {
+        console.log(`Ziehe Punkte von Spieler ${username} ab`);
+        const game = gameServer.deductPointsFromPlayer(gameId, username)
+        if (game) {
+            io.to(gameId).emit('deductedPointsFromPlayer', game)
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('Ein Spieler hat die Verbindung getrennt');
         socket.disconnect
     });
 
     socket.on('syncDice', (payload: { gameId: string; diceValues: DiceValue[] }) => {
-        console.log(`SyncDice: recievedDiceValues: ${payload.diceValues}`);
+        console.log(`SyncDice: recievedDiceValues: ${payload.diceValues} for game ${payload.gameId}`);
         io.to(payload.gameId).emit('recievedDiceValues', payload.diceValues)
     })
 
-    socket.on('playerLeft', (data: { gameId: string; username: string }) => {
-        gameServer.removePlayer(data.gameId, data.username)
-        console.log(`Spieler ${data.username} hat das Spiel ${data.gameId} verlassen`);
-        io.to(data.gameId).emit('playerDidLeave', data.username)
-        socket.leave(data.gameId)
+    socket.on('playerLeft', ({ gameId, username }: { gameId: string; username: string }) => {
+        gameServer.removePlayer(gameId, username)
+        const game = gameServer.getGame(gameId)
+        console.log(`Spieler ${username} hat das Spiel ${gameId} verlassen`);
+        if (game) {
+            console.log('game Exists')
+            if (game.players.length > 0) {
+                console.log('emit player leaved event')
+                io.to(gameId).emit('playerDidLeave', username)
+                if (gameServer.isCreator(gameId, username)) {
+                    game.creator = game.players[0]
+                    io.to(gameId).emit('creatorChanged', game)
+                }
+            } else {
+                gameServer.deleteGame(gameId)
+            }
+        }
+        socket.leave(gameId)
     })
 });
 
