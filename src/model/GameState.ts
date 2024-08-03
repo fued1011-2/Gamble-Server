@@ -11,6 +11,7 @@ export interface GameState {
     thrown: boolean;
     win: boolean;
     players: Player[],
+    disconnectedPlayers: Player[]
     currentPlayerIndex: number;
     menu: boolean;
     creator: Player

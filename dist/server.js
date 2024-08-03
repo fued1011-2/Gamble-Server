@@ -109,6 +109,7 @@ io.on('connection', (socket) => {
         socket.disconnect;
     });
     socket.on('syncDice', (payload) => {
+        console.log(`SyncDice: recievedDiceValues: ${payload.diceValues}`);
         io.to(payload.gameId).emit('recievedDiceValues', payload.diceValues);
     });
     socket.on('playerLeft', (data) => {

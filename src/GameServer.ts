@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { GameState } from "./model/GameState";
+import { Player } from "./model/Player";
 
 class GameServer {
     private games: Map<string, GameState>;
@@ -20,6 +21,7 @@ class GameServer {
             thrown: false,
             win: false,
             players: [],
+            disconnectedPlayers: [],
             currentPlayerIndex: 0,
             menu: false,
             creator: {id: randomUUID(), score: 0, username: '', zeroCount: 0, scoreHistory: []}
@@ -298,9 +300,15 @@ class GameServer {
     }
 
     removePlayer(gameId:string, username: string): GameState | undefined {
-        const game = this.games.get(gameId);
+        console.log(username)
+        const game = this.games.get(gameId)
         if (game) {
-            game.players = game.players.filter(player => player.username !== username);
+            game.players = game.players.filter(player => player.username !== username)
+            const disconnectedPlayer = game.players.find(player => player.username === username)
+            if (disconnectedPlayer) {
+                game.disconnectedPlayers.push(disconnectedPlayer)
+            }
+            console.log(game.players)
         }
         return game
     }
@@ -332,12 +340,27 @@ class GameServer {
     addPlayer(gameId: string, username: string, isCreator: boolean): GameState | undefined {
         const game = this.games.get(gameId);
         if (game) {
-            game.players.push({id: randomUUID(), score: 0 , username: username, zeroCount: 0, scoreHistory: []});
+            const formerPlayer = this.getFormerPlayer(gameId, username)
+            if (formerPlayer) {
+                game.players.push(formerPlayer)
+            } else {
+                game.players.push({id: randomUUID(), score: 0 , username: username, zeroCount: 0, scoreHistory: []});
+            }
             if (isCreator) {
                 game.creator = game.players[0]
             }
         }
         return game;
+    }
+
+    private getFormerPlayer(gameId: string, username: string): Player | undefined {
+        const game = this.games.get(gameId);
+        if (game) {
+            const formerPlayer = game.disconnectedPlayers.find(player => player.username == username);
+            if (formerPlayer) {
+                return formerPlayer
+            }
+        }
     }
 
     checkSelectedDice(gameId: string): boolean {

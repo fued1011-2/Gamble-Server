@@ -125,6 +125,7 @@ io.on('connection', (socket: GameSocket) => {
     });
 
     socket.on('syncDice', (payload: { gameId: string; diceValues: DiceValue[] }) => {
+        console.log(`SyncDice: recievedDiceValues: ${payload.diceValues}`);
         io.to(payload.gameId).emit('recievedDiceValues', payload.diceValues)
     })
 
