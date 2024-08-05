@@ -298,7 +298,7 @@ class GameServer {
         if (game) {
             game.takenDice = [];
             game.selectedDice = [];
-            game.players[game.currentPlayerIndex].score += game.roundScore + game.throwScore + 9000;
+            game.players[game.currentPlayerIndex].score += game.roundScore + game.throwScore;
             game.players[game.currentPlayerIndex].scoreHistory.push(game.players[game.currentPlayerIndex].score)
             game.players[game.currentPlayerIndex].zeroCount = 0
             game.roundScore = 0;
@@ -310,6 +310,7 @@ class GameServer {
                 game.isLastRound = true;
                 game.winnerIndex = game.currentPlayerIndex
                 game.lastRoundCounter += 1
+                game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
             } else if (game.isLastRound == true && game.lastRoundCounter == game.players.length - 1) {
                 console.log('WIN!!!!')
                 game.win = true;
@@ -317,11 +318,15 @@ class GameServer {
             } else if (game.isLastRound) {
                 console.log('Plus lastRoundCounter')
                 game.lastRoundCounter += 1
+                game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
+                if (game.players[game.currentPlayerIndex].score >= game.players[game.winnerIndex].score) {
+                    game.winnerIndex = game.currentPlayerIndex
+                }
+            } else {
+                game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
             }
 
             console.log('normal Round ended')
-
-            game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
         }
         return game;
     }

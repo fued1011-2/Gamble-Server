@@ -106,7 +106,7 @@ io.on('connection', (socket) => {
                 io.to(gameId).emit('lastRound', updatedGame);
             }
             if (updatedGame.win) {
-                io.to(gameId).emit('gameWon', updatedGame.currentPlayerIndex);
+                io.to(gameId).emit('gameWon', updatedGame.winnerIndex);
             }
             console.log(`Runde beendet in Spiel ${gameId}`);
         }
