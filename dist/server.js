@@ -49,6 +49,24 @@ io.on('connection', (socket) => {
         io.to(gameId).emit('gameStarted');
         console.log(`Spiel ${gameId} gestartet`);
     });
+    socket.on('changeUsername', ({ gameId, index, newUsername }) => {
+        console.log(`Benutzername wird geändert in Spiel ${gameId}`);
+        const updatedGame = gameServer.changeUsername(gameId, index, newUsername);
+        if (updatedGame) {
+            io.to(gameId).emit('usernameChanged', updatedGame);
+        }
+    });
+    socket.on('removePlayer', ({ gameId, index }) => {
+        console.log(`Spieler wird aus Spiel ${gameId} gekickt`);
+        const result = gameServer.removePlayerByIndex(gameId, index);
+        if (result === null || result === void 0 ? void 0 : result.game) {
+            io.to(gameId).emit('playerRemoved', {
+                game: result.game,
+                removedUsername: result.removedUsername
+            });
+            console.log(`Spieler ${result.removedUsername} wurde aus Spiel ${JSON.stringify(result.game)} gekickt`);
+        }
+    });
     socket.on('rollDice', (gameId) => {
         const updatedGame = gameServer.rollDice(gameId);
         if (updatedGame) {
@@ -84,8 +102,11 @@ io.on('connection', (socket) => {
         const updatedGame = gameServer.endRound(gameId);
         if (updatedGame) {
             io.to(gameId).emit('roundEnded', updatedGame);
+            if (updatedGame.isLastRound && updatedGame.lastRoundCounter == 1) {
+                io.to(gameId).emit('lastRound', updatedGame);
+            }
             if (updatedGame.win) {
-                io.to(gameId).emit('gameWon', { winnerId: updatedGame.currentPlayerIndex });
+                io.to(gameId).emit('gameWon', updatedGame.currentPlayerIndex);
             }
             console.log(`Runde beendet in Spiel ${gameId}`);
         }
@@ -120,8 +141,11 @@ io.on('connection', (socket) => {
         socket.disconnect;
     });
     socket.on('syncDice', (payload) => {
-        console.log(`SyncDice: recievedDiceValues: ${payload.diceValues} for game ${payload.gameId}`);
-        io.to(payload.gameId).emit('recievedDiceValues', payload.diceValues);
+        const { gameId, diceValues } = payload;
+        console.log(`SyncDice: received for game ${gameId}`);
+        console.log("Dice values:", JSON.stringify(diceValues, null, 2));
+        // Emit the received dice values to all clients in the game room
+        io.to(gameId).emit('receivedDiceValues', diceValues);
     });
     socket.on('playerLeft', ({ gameId, username }) => {
         gameServer.removePlayer(gameId, username);

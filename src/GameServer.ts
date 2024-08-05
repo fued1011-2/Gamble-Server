@@ -24,7 +24,10 @@ class GameServer {
             disconnectedPlayers: [],
             currentPlayerIndex: 0,
             menu: false,
-            creator: {id: randomUUID(), score: 0, username: '', zeroCount: 0, scoreHistory: []}
+            creator: {id: randomUUID(), score: 0, username: '', zeroCount: 0, scoreHistory: []},
+            isLastRound : false,
+            lastRoundCounter: 0,
+            winnerIndex: -1,
         });
     }
 
@@ -35,6 +38,15 @@ class GameServer {
         } else {
             return false
         }
+    }
+
+    changeUsername(gameId: string, index: number, newUsername: string) {
+        const game = this.games.get(gameId);
+        if (game) {
+            game.players[index].username = newUsername
+        }
+        console.log('Username changed to ' + newUsername)
+        return game
     }
 
     private createRandomDiceRotation(): DiceRotation {
@@ -286,26 +298,48 @@ class GameServer {
         if (game) {
             game.takenDice = [];
             game.selectedDice = [];
-            game.players[game.currentPlayerIndex].score += game.roundScore + game.throwScore;
+            game.players[game.currentPlayerIndex].score += game.roundScore + game.throwScore + 9000;
             game.players[game.currentPlayerIndex].scoreHistory.push(game.players[game.currentPlayerIndex].score)
             game.players[game.currentPlayerIndex].zeroCount = 0
             game.roundScore = 0;
             game.throwScore = 0;
             game.thrown = false;
 
-            if (game.players[game.currentPlayerIndex].score >= 10000) {
-                setTimeout(() => {
-                    if (game) {
-                        game.players[game.currentPlayerIndex].score = 0;
-                        game.win = true;
-                    }
-                }, 3000);
+            if (game.players[game.currentPlayerIndex].score >= 10000 && game.isLastRound == false) {
+                console.log('first player reached 10k')
+                game.isLastRound = true;
+                game.winnerIndex = game.currentPlayerIndex
+                game.lastRoundCounter += 1
+            } else if (game.isLastRound == true && game.lastRoundCounter == game.players.length - 1) {
+                console.log('WIN!!!!')
+                game.win = true;
                 return game;
+            } else if (game.isLastRound) {
+                console.log('Plus lastRoundCounter')
+                game.lastRoundCounter += 1
             }
+
+            console.log('normal Round ended')
 
             game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
         }
         return game;
+    }
+
+    removePlayerByIndex(gameId:string, index: number): { game: GameState, removedUsername: string } | undefined {
+        console.log('removePlayerByIndex')
+        const game = this.games.get(gameId)
+        if (game) {
+            console.log(game.players)
+            const removedPlayer = game.players.splice(index, 1)[0];
+            let removedUsername = ''
+            console.log(game.players)
+            console.log(removedPlayer)
+            removedUsername = removedPlayer.username;
+            console.log({ game, removedUsername })
+            return { game, removedUsername };
+        }
+        return undefined
     }
 
     removePlayer(gameId:string, username: string): GameState | undefined {
@@ -369,7 +403,7 @@ class GameServer {
         if (game) {
             const formerPlayer = this.getFormerPlayer(gameId, username)
             if (formerPlayer) {
-                console.log(`isFormerPlayer: ${formerPlayer}`)
+                console.log(`isFormerPlayer: ${JSON.stringify(formerPlayer)}`)
                 game.players.push(formerPlayer)
             } else {
                 console.log(`isNotFormerPlayer: ${formerPlayer}`)

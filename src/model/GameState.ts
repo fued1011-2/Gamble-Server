@@ -14,5 +14,8 @@ export interface GameState {
     disconnectedPlayers: Player[]
     currentPlayerIndex: number;
     menu: boolean;
-    creator: Player
+    creator: Player;
+    isLastRound: boolean;
+    lastRoundCounter: number;
+    winnerIndex: number;
 }
